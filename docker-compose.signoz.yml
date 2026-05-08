@@ -36,7 +36,7 @@ services:
     hostname: signoz-otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
-      - ./signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - "4317:4317"
       - "4318:4318"
@@ -60,7 +60,7 @@ services:
       TELEMETRY_ENABLED: "false"
       DEPLOYMENT_TYPE: docker-standalone-amd
     volumes:
-      - ./signoz/prometheus.yml:/root/config/prometheus.yml
+      - ./prometheus.yml:/root/config/prometheus.yml
       - signoz_query_data:/root/data
     ports:
       - "8080:8080"
