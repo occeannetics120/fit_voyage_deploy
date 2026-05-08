@@ -55,7 +55,7 @@ services:
     hostname: query-service
     command: ["-config=/root/config/prometheus.yml"]
     environment:
-      ClickHouseUrl: tcp://clickhouse:9000
+      ClickHouseUrl: tcp://clickhouse:9000?username=admin&password=${CLICKHOUSE_PASSWORD:-signoz-clickhouse-pass}
       STORAGE: clickhouse
       GODEBUG: netdns=go
       TELEMETRY_ENABLED: "false"
