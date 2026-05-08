@@ -29,8 +29,19 @@ services:
       timeout: 5s
       retries: 5
 
+  otel-collector-migrator:
+    image: signoz/signoz-schema-migrator:0.102.2
+    container_name: otel-migrator
+    command:
+      - "--dsn=tcp://clickhouse:9000"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - signoz_network
+
   otel-collector:
-    image: signoz/signoz-otel-collector:0.88.13
+    image: signoz/signoz-otel-collector:0.102.2
     container_name: signoz_otel_collector
     hostname: signoz-otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
