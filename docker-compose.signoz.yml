@@ -52,7 +52,7 @@ services:
   query-service:
     image: signoz/query-service:0.49.1
     container_name: signoz_query_service
-    hostname: query-service
+    hostname: signoz-query-service
     command: ["-config=/root/config/prometheus.yml"]
     environment:
       ClickHouseUrl: tcp://clickhouse:9000?username=admin&password=${CLICKHOUSE_PASSWORD:-signoz-clickhouse-pass}
