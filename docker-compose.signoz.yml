@@ -62,7 +62,7 @@ services:
       DEPLOYMENT_TYPE: docker-standalone-amd
     volumes:
       - ./prometheus.yml:/root/config/prometheus.yml
-      - signoz_query_data:/root/data
+      - signoz_query_data:/var/lib/signoz
     ports:
       - "8080:8080"
     depends_on:
