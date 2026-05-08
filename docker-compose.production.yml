@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: quay.io/influxdb/influxdb3-core:latest
+    container_name: fit_voyage_influxdb_prod
+    ports:
+      - "8181:8181"
+    command:
+      - serve
+      - --object-store
+      - file
+      - --data-dir
+      - /var/lib/influxdb3
+      - --bearer-token
+      - ${INFLUXDB_TOKEN}
+    volumes:
+      - influxdb_data:/var/lib/influxdb3
+    networks:
+      - fit_voyage_network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: fit_voyage_grafana_prod
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_SERVER_ROOT_URL=${GRAFANA_URL}
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_SERVER_ENABLE_GZIP=true
+      - GF_SECURITY_COOKIE_SAMESITE=none
+      - GF_SECURITY_COOKIE_SECURE=false
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_SECURITY_ALLOW_ORIGIN=${FRONTEND_URL}
+      - GF_SECURITY_ALLOW_CREDENTIALS=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_FEATURE_TOGGLES_ENABLE=live
+      - GF_LIVE_MAX_CONNECTIONS=100
+      - GF_LIVE_ALLOWED_ORIGINS=${FRONTEND_URL}
+      - GF_LIVE_AUTH_SKIP=true
+      - GF_LIVE_ALLOWED_UNAUTHENTICATED_FRAMES=true
+      - GF_LIVE_ALLOWED_UNAUTHENTICATED_CHANNELS=stream/*
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_config:/etc/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+    networks:
+      - fit_voyage_network
+    depends_on:
+      - influxdb
+    restart: unless-stopped
+
+volumes:
+  influxdb_data:
+  grafana_data:
+  grafana_config:
+
+networks:
+  fit_voyage_network:
+    driver: bridge
+    name: fit_voyage_network

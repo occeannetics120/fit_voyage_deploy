@@ -1,0 +1,100 @@
+version: '3.8'
+
+# SigNoz observability stack
+# Start:   docker compose -f docker-compose.signoz.yml up -d
+# UI:      http://<your-server-ip>:3301
+# NOTE: Run docker-compose.vm.yml at least once first so fit_voyage_network exists
+
+services:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1.5-alpine
+    container_name: signoz_clickhouse
+    hostname: clickhouse
+    environment:
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-signoz-clickhouse-pass}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - signoz_clickhouse_data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - signoz_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  otel-collector:
+    image: signoz/otelcontribcol:0.88.13
+    container_name: signoz_otel_collector
+    hostname: signoz-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - signoz_network
+      - fit_voyage_network
+    restart: unless-stopped
+
+  query-service:
+    image: signoz/query-service:0.49.1
+    container_name: signoz_query_service
+    hostname: query-service
+    command: ["-config=/root/config/prometheus.yml"]
+    environment:
+      ClickHouseUrl: tcp://clickhouse:9000
+      STORAGE: clickhouse
+      GODEBUG: netdns=go
+      TELEMETRY_ENABLED: "false"
+      DEPLOYMENT_TYPE: docker-standalone-amd
+    volumes:
+      - ./signoz/prometheus.yml:/root/config/prometheus.yml
+      - signoz_query_data:/root/data
+    ports:
+      - "8080:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - signoz_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: signoz/frontend:0.49.1
+    container_name: signoz_frontend
+    ports:
+      - "3301:3301"
+    depends_on:
+      query-service:
+        condition: service_healthy
+    networks:
+      - signoz_network
+    restart: unless-stopped
+
+volumes:
+  signoz_clickhouse_data:
+  signoz_query_data:
+
+networks:
+  signoz_network:
+    driver: bridge
+  fit_voyage_network:
+    external: true
+    name: fit_voyage_network
