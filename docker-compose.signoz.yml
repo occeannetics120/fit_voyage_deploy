@@ -29,19 +29,6 @@ services:
       timeout: 5s
       retries: 5
 
-  schema-migrator:
-    image: signoz/schema-migrator:0.49.1
-    container_name: signoz_schema_migrator
-    command:
-      - "--dsn=tcp://clickhouse:9000"
-      - "--replication=false"
-      - "--cluster=cluster"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-    networks:
-      - signoz_network
-
   otel-collector:
     image: signoz/signoz-otel-collector:0.88.13
     container_name: signoz_otel_collector
