@@ -3,13 +3,13 @@ version: '3.8'
 services:
   backend:
     build:
-      context: /fit_voyage_backend_nest
+      context: /root/fit_voyage_backend_nest
       dockerfile: Dockerfile
     container_name: fit_voyage_backend
     ports:
       - "3001:3001"
     env_file:
-      - /fit_voyage_backend_nest/.env
+      - /root/fit_voyage_backend_nest/.env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
