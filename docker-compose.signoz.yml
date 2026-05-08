@@ -12,9 +12,7 @@ services:
     container_name: signoz_clickhouse
     hostname: clickhouse
     environment:
-      CLICKHOUSE_USER: admin
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-signoz-clickhouse-pass}
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      CLICKHOUSE_DB: signoz_metrics
     volumes:
       - signoz_clickhouse_data:/var/lib/clickhouse
       - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/listen_host.xml
@@ -55,7 +53,7 @@ services:
     hostname: signoz-query-service
     command: ["-config=/root/config/prometheus.yml"]
     environment:
-      ClickHouseUrl: tcp://clickhouse:9000?username=admin&password=${CLICKHOUSE_PASSWORD:-signoz-clickhouse-pass}
+      ClickHouseUrl: tcp://clickhouse:9000
       STORAGE: clickhouse
       GODEBUG: netdns=go
       TELEMETRY_ENABLED: "false"
